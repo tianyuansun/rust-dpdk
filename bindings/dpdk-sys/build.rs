@@ -175,8 +175,8 @@ impl State {
     fn find_dpdk(&mut self, install_path: &Option<String>) {
         // To find correct lib path of this platform.
         let full_install_path = match install_path {
-            Some(install_path) => Path::new(&install_path).join("usr/local"),
-            None => PathBuf::from("/usr"),
+            Some(install_path) => Path::new(&install_path).join(""),
+            None => PathBuf::from("/root/dpdk-20.11/x86_64-native-linuxapp-gcc"),
         };
         let machine_string = Command::new("cc")
             .args(&["-dumpmachine"])
@@ -668,18 +668,18 @@ impl State {
 
         // List of manually enabled DPDK PMDs
         let mut linkable_whitelist: Vec<_> = vec![
-            "rte_pmd_ixgbe_set_all_queues_drop_en", // ixgbe
-            "rte_pmd_i40e_ping_vfs",                // i40e
-            "e1000_igb_init_log",                   // e1000
+            //"rte_pmd_ixgbe_set_all_queues_drop_en", // ixgbe
+            //"rte_pmd_i40e_ping_vfs",                // i40e
+            //"e1000_igb_init_log",                   // e1000
             "ice_release_vsi",                      // ice
-            "vmxnet3_dev_tx_queue_release",         // vmxnet3
+            //"vmxnet3_dev_tx_queue_release",         // vmxnet3
             "virtio_dev_pause",                     // virtio
-            "softnic_thread_free",                  // softnic
+            //"softnic_thread_free",                  // softnic
             // "ipn3ke_hw_tm_init", // ipn3ke (currently not enabled)
             // "mlx4_fd_set_non_blocking", // mlx4 (currently not enabled)
             // "mlx5_set_cksum_table", // mlx5 (currently not enabled)
             "iavf_prep_pkts",                    // iavf
-            "fm10k_get_pcie_msix_count_generic", // fm10k
+            //"fm10k_get_pcie_msix_count_generic", // fm10k
         ]
         .iter()
         .map(|name| (*name).to_string())
@@ -706,7 +706,7 @@ impl State {
         for link in &self.dpdk_links {
             let libname = link.file_name().unwrap().to_str().unwrap();
 
-            if libname == "librte_pmd_mlx5.a" {
+            if libname == "librte_net_mlx5.a" {
                 linkable_whitelist.push("mlx5_set_cksum_table".to_string());
                 linkable_extern_def_list.push("void mlx5_set_cksum_table(void)".to_string());
                 break;
@@ -775,6 +775,7 @@ impl State {
             .clang_arg(dpdk_config_path.to_str().unwrap())
             .clang_arg("-march=native")
             .clang_arg("-Wno-everything")
+            .derive_debug(true)
             .rustfmt_bindings(true)
             .opaque_type("max_align_t")
             .opaque_type("rte_event.*")
@@ -898,6 +899,7 @@ impl State {
 fn main() {
     let mut state = State::new();
     let dpdk_install_path = env::var("DPDK_INSTALL_PATH").ok();
+    // let dpdk_install_path = "/root/dpdk-20.11/x86_64-native-linuxapp-gcc"
     if dpdk_install_path.is_none() {
         eprintln!("Path to DPDK install path not specified (as env variable DPDK_INSTALL_PATH), attempting system path");
     }

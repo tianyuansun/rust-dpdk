@@ -15,6 +15,12 @@ extern "C" {}
 #[link(name = "pcap")]
 extern "C" {}
 
+#[link(name = "mlx5")]
+extern "C" {}
+
+#[link(name = "ibverbs")]
+extern "C" {}
+
 include!(concat!(env!("OUT_DIR"), "/lib.rs"));
 
 /// Thin compatibility layer for items which names changed between dpdk 19 and 20 versions. This
